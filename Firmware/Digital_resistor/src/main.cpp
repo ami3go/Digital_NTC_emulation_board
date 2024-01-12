@@ -3,21 +3,7 @@
 #include <SPI.h>
 
 
-// debug macros for an easy access to Serial.print function
-// 
-//#define DEBUG  // enable debug macros uncomment this line 
-// use case : insert DEBUG_PRINT(x) in code. 
-//
 
-#ifdef DEBUG
- #define DEBUG_PRINT(x)        Serial.print (x)
- #define DEBUG_PRINTDEC(x)     Serial.print (x, DEC)
- #define DEBUG_PRINTLN(x)      Serial.println (x)
-#else
- #define DEBUG_PRINT(x)
- #define DEBUG_PRINTDEC(x)
- #define DEBUG_PRINTLN(x)
-#endif
 
 
 // put string constant into FLASH memory to reduse RAM usage
@@ -48,6 +34,23 @@ void errorCallback(cmd_error* e);
 
 
 
+ 
+
+
+/*********State Machine Applications ************************/
+ 
+/*********Finite Start Machine. State list: ************************/
+State state_start(&enter_start, &on_start,&exit_start); //initial state
+State state_main(&enter_main, &on_main, &exit_main); //fill up default configuration
+State state_trig(&enter_trig, &on_trig, &exit_trig);  
+State state_set(&enter_set, &on_set, &exit_set);
+
+
+// Fsm fsm(&state_int); // Starting state  
+
+
+
+
 
 /****************Arduino setUp app start *********************************************
  ************************************************************************************* 
@@ -57,7 +60,10 @@ void setup() {
   // put your setup code here, to run once:
   pinMode(LED_BUILTIN, OUTPUT);
   Serial.begin(UARTSpeed);
-
+  
+  // Initialize SPI communication
+  pinMode(slaveSelectPin, OUTPUT); 
+  SPI.begin();
 
 /******* Command Line interface int ********************************/
 //Command start; getstatus; getvload; getvload ; 
@@ -69,6 +75,16 @@ void setup() {
       cmdHelp.setDescription(StrHelp);
 
 cli.setOnError(errorCallback); // Set error Callback
+
+
+/***********FSM TRANSITIONS  Settings start **************************************************************************/
+// /*1*/  fsm.add_timed_transition(&state_int,          &state_default_conf,  HomeScreenShowTime,         NULL);  // timed tansition 
+// /*2*/  fsm.add_timed_transition(&state_default_conf, &state_waiting_start, DefCongToWaitingStartDelay, NULL);  // timed tansition  
+
+// /*3*/  fsm.add_transition(&state_waiting_start, &state_setup_ontime,   GoTo_OnTimeSetUp, NULL); // hold encoder button to  change settings 
+
+
+
 
 }
 
