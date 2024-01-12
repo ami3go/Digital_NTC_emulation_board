@@ -1,13 +1,7 @@
 #include "apps.h"
-#include "Variables_def.h"
-#include <Arduino.h>
-#include <avr/pgmspace.h> // libs for working with flash, writing and reading text constants 
 
 
-
-
-
-
+// help messange will add later 
 void printHelptoSerial (void){
   Serial.println(F("|----------------Supported command list:-------------------------------|"));
   Serial.println(F("| 1 | start | Start generating, trigger run button via uart            |"));

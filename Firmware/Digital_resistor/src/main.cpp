@@ -1,10 +1,6 @@
 #include <Arduino.h>
-#include <avr/pgmspace.h> // libs for working with flash, writing and reading text constants 
-#include "SimpleCLI.h" // https://github.com/spacehuhn/SimpleCLI
-#include "Fsm.h"  //https://github.com/jonblack/arduino-fsm
-#include "Apps/Variables_def.h" // list of variables
-#include "Apps/apps.h"
-
+#include "main.h"
+#include <SPI.h>
 
 
 // debug macros for an easy access to Serial.print function
