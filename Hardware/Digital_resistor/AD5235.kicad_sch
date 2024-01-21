@@ -628,6 +628,31 @@
     (uuid fb7a5ccc-f83a-42fc-96ec-6ade47fbc130)
   )
 
+  (label "R1-W" (at 142.24 135.89 0) (fields_autoplaced)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid 08bad52c-26d8-4fa1-8e33-62c0824db770)
+  )
+  (label "R0-W" (at 116.84 135.89 0) (fields_autoplaced)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid 34122771-257f-4803-8de9-9411c5d88a8a)
+  )
+  (label "R1-A" (at 142.24 133.35 0) (fields_autoplaced)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid 81b68102-71e4-4fae-9b1e-45be1bb76c09)
+  )
+  (label "R0-B" (at 116.84 138.43 0) (fields_autoplaced)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid a01c2a0a-59b7-4290-9e53-e1df82547171)
+  )
+  (label "R1-B" (at 142.24 138.43 0) (fields_autoplaced)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid c406a068-2dbf-46ba-aa2d-55f10e6babca)
+  )
+  (label "R0-A" (at 116.84 133.35 0) (fields_autoplaced)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid d79cf993-b87a-4d72-9cc4-6f08d4e43e4c)
+  )
+
   (hierarchical_label "SDI" (shape input) (at 76.2 74.93 180) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify right))
     (uuid 339786fc-0058-41c2-a66d-0124308437c8)
@@ -710,7 +735,7 @@
   (symbol (lib_id "PCM_4ms_Connector:Conn_02x03") (at 133.35 135.89 0) (mirror x) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 38e3223c-5bf8-4b1f-a2c3-5c543f123491)
-    (property "Reference" "J1" (at 133.35 144.78 0)
+    (property "Reference" "J6" (at 133.35 144.78 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "Conn_02x03" (at 133.35 142.24 0)
@@ -740,16 +765,16 @@
     (instances
       (project "Digital_resistor"
         (path "/39961e6f-a344-457f-bf77-17001d2372f3/acf9be93-9339-4dc4-83a8-8ca1057885a4"
-          (reference "J1") (unit 1)
+          (reference "J6") (unit 1)
         )
         (path "/39961e6f-a344-457f-bf77-17001d2372f3/7e5db31c-6d0d-4589-b40d-85994497e35f"
-          (reference "J2") (unit 1)
+          (reference "J4") (unit 1)
         )
         (path "/39961e6f-a344-457f-bf77-17001d2372f3/04dd5ef7-d041-41b1-8272-c3dbae7efcd3"
-          (reference "J3") (unit 1)
+          (reference "J2") (unit 1)
         )
         (path "/39961e6f-a344-457f-bf77-17001d2372f3/1ede5d6d-d221-46b5-9ca7-f7eccbe58a54"
-          (reference "J4") (unit 1)
+          (reference "J0") (unit 1)
         )
       )
     )
@@ -758,7 +783,7 @@
   (symbol (lib_id "Analog_local:AD5235BRUZ250-R7") (at 134.62 87.63 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 68036bee-db19-4e13-b162-3fe05433e988)
-    (property "Reference" "U1" (at 134.62 57.15 0)
+    (property "Reference" "U6" (at 134.62 57.15 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "AD5235BRUZ250-R7" (at 134.62 59.69 0)
@@ -831,16 +856,16 @@
     (instances
       (project "Digital_resistor"
         (path "/39961e6f-a344-457f-bf77-17001d2372f3/acf9be93-9339-4dc4-83a8-8ca1057885a4"
-          (reference "U1") (unit 1)
+          (reference "U6") (unit 1)
         )
         (path "/39961e6f-a344-457f-bf77-17001d2372f3/7e5db31c-6d0d-4589-b40d-85994497e35f"
-          (reference "U2") (unit 1)
-        )
-        (path "/39961e6f-a344-457f-bf77-17001d2372f3/1ede5d6d-d221-46b5-9ca7-f7eccbe58a54"
           (reference "U4") (unit 1)
         )
+        (path "/39961e6f-a344-457f-bf77-17001d2372f3/1ede5d6d-d221-46b5-9ca7-f7eccbe58a54"
+          (reference "U0") (unit 1)
+        )
         (path "/39961e6f-a344-457f-bf77-17001d2372f3/04dd5ef7-d041-41b1-8272-c3dbae7efcd3"
-          (reference "U3") (unit 1)
+          (reference "U2") (unit 1)
         )
       )
     )
