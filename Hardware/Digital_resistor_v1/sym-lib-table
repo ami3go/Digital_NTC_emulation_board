@@ -1,0 +1,6 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "Analog_local")(type "KiCad")(uri "/home/aleks/Documents/Kicad/Digital_NTC_emulation_board/Hardware/Libs/Analog_local.kicad_sym")(options "")(descr ""))
+  (lib (name "Boards")(type "KiCad")(uri "/home/aleks/Documents/Kicad/Libs/Boards.kicad_sym")(options "")(descr ""))
+  (lib (name "Connectors_local")(type "KiCad")(uri "/home/aleks/Documents/Kicad/Libs/Connectors_local.pretty/Connectors_local.kicad_sym")(options "")(descr ""))
+)

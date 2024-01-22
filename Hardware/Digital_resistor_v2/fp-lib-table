@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "Analog")(type "KiCad")(uri "/home/aleks/Documents/Kicad/Digital_NTC_emulation_board/Hardware/Libs/Analog.pretty")(options "")(descr ""))
+)
