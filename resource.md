@@ -10,4 +10,5 @@ https://github.com/jplattel/upymenu - uPyMenu is a micropython menu implementati
 
 https://github.com/joewez/PyboardFileManager 
 
+https://github.com/dhylands/upy-shell?tab=readme-ov-file
 
