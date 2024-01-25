@@ -1,6 +1,6 @@
 import machine
 
-class <link>UART_CLI</link>:
+class UART_CLI:
     def __init__(self, uart_num, baudrate):
         self.uart = machine.UART(uart_num, baudrate=baudrate)
         self.commands = {}  # Dictionary to store commands and their corresponding actions
@@ -25,7 +25,7 @@ def turn_off_led(param):
     # Custom action to turn off the LED based on the parameter
     pass  # Replace with actual code to turn off the LED
 
-uart_cli = <link>UART_CLI</link>(uart_num=0, baudrate=115200)
+uart_cli = UART_CLI(uart_num=0, baudrate=115200)
 uart_cli.add_command('led_on', turn_on_led)  # Add a custom command "led_on" with the corresponding action
 uart_cli.add_command('led_off', turn_off_led)  # Add a custom command "led_off" with the corresponding action
 
