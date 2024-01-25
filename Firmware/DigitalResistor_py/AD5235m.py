@@ -1,129 +1,158 @@
-# import machine
-# import time
-# from micropython import const
-# from rp2 import PIO, asm_pio
+"""
+###########################################################
+# Filename: AD5235.py
+# Description:
+#   Control digital resistor AD5235
+#   capable to control daisy chain
+#
+# Author: [Aleksandr Chasnyk]
+# Created: [2024.01.23]
+# Last modified: [Date last modified]
+# Python Version: [>3]
+#
+# Description:
+## Define default
+spi_freq = 1000000  # SPI frequency in Hz
+cs_pin = 9  # GPIO pin for Chip Select (CS)
+sck_pin = 10  # GPIO pin for SPI Clock (SCK)
+mosi_pin = 11  # GPIO pin for SPI Master Out Slave In (MOSI)
+miso_pin = 8  # GPIO pin for SPI Master In Slave Out (MISO)
+
+#
+###########################################################
+"""
+
+import machine
+import time
+from micropython import const
+from rp2 import PIO, asm_pio
 
 
-def range_check(val, min, max):
-    if val > max:
-        # print(f"Wrong {val_name}: {val}. Max output should be less then {max} V")
-        val = max
-    if val < min:
-        # print(f"Wrong {val_name}: {val}. Should be >= {min}")
-        val = min
-    return val
+def range_check(val, min_val, max_val):
+    # Ensure val is within the specified range
+    val = max_val if val > max_val else val  # If val is greater than max_val, set it to max_val, otherwise keep it unchanged
+    val = min_val if val < min_val else val  # If val is less than min_val, set it to min_val, otherwise keep it unchanged
+    return val  # Return the adjusted value
 
 
-class AD9235_class:
+class AD5235_class:
     def __init__(self, spi=0, sck_pin=1, mosi_pin=2, miso_pin=3, cs_pin=4, daisy_chain=4):
-
-        # Configure CS pin as an output
-        # note 16 bit buffer as RP2040 support it
-        # machine.SPI(0,
-        #             baudrate=1_000_000,
-        #             sck=machine.Pin(sck_pin),
-        #             mosi=machine.Pin(mosi_pin),
-        #             miso=machine.Pin(miso_pin),
-        #             cs=machine.Pin(cs_pin),
-        #             txbuf=0,
-        #             rxbuf=0,
-        #             polarity=0,
-        #             phase=0,
-        #             bits=16)
-        #
-        # self.cs = machine.Pin(cs_pin, machine.Pin.OUT)
+        '''
+        Initialization of class
+        :param spi: for RP2040 available 0 or 1
+        :param sck_pin: clock pin
+        :param mosi_pin: MOSI pin
+        :param miso_pin: MISO pin
+        :param cs_pin: chip select
+        :param daisy_chain: min 1 max 4
+        '''
+        self.cs = machine.Pin(cs_pin, machine.Pin.OUT)
         # # Initialize SPI
-        # self.spi.init(baudrate=self.clk_freq, polarity=0, phase=0)
+        # bits = 8
+        # bits =  16 experimental to check
+        self.spi = machine.SPI(spi,
+                               baudrate=1_000_000,
+                               sck=machine.Pin(sck_pin),
+                               mosi=machine.Pin(mosi_pin),
+                               miso=machine.Pin(miso_pin),
+                               polarity=0,
+                               phase=0,
+                               bits=8)
 
-        self.ch = daisy_chain *2
-        self.buf_set_r = [0] * self.ch  # buffer for setting resistor value in ADC counts
-        self.buf_rd = [0] * self.ch  # buffer for reading current start of wiper position in ADC counts
-        self.buf_cmd = [0] * self.ch  # buffer for SPI command
-        self.buf_spi_tx = [0] * self.ch *2  # SPI transmit buffer
+        self._dev_adr = [0, 1] * daisy_chain  # there is 2 resistors in one IC packages
+        buffer = [0] * daisy_chain * 2
+        self._buf_set_res = buffer.copy()  # buffer for setting resistor value in ADC counts
+        self._buf_rd = buffer.copy()  # buffer for reading current start of wiper position in ADC counts
+        self._buf_cmd_spi = buffer.copy() * 2  # SPI transmit buffer uses 16 bits values
 
-    # def read_adc(self):
-    #     # Select the ADC
-    #     self.cs.value(0)
-    #
-    #     # Send command to read ADC data
-    #     command = bytes([0x01, 0x02, 0x03])  # Replace with the actual command bytes
-    #     self.spi.write(command)
-    #
-    #     # Read data from ADC
-    #     data = self.spi.read(2)  # Replace with the actual number of bytes to read
-    #
-    #     # Deselect the ADC
-    #     self.cs.value(1)
-    #
-    #     # Process and return the ADC data
-    #     adc_value = (data[0] << 8) | data[1]  # Replace with your data processing logic
-    #     return adc_value
+    def write_to_dev(self):
+        '''
+        Write value buffer to device
+        :return: None
+        '''
+        print(self._buf_rd)
+        # Select the ADC
+        self._fill_cmd_buf()
+        # Send command to read ADC data
+        # print(self._buf_cmd_spi) # for debug only
+        command = bytes(self._buf_cmd_spi)  # Replace with the actual command bytes
+        self.cs.value(0) # Select the Chip select
+        self.spi.write(command) # write buffer
+        self.cs.value(1) # Deselect the Chip select
+
     # def query(self, cmd_array):
     # def set_rdaq(self, ch, val):
-    def set_buffer(self, position, reg_val):
+    def set_raw_val(self, position, reg_cnt):
         '''
-        :param position: postion of resistor. IC0 -> 0,1; IC1 ->2,3; IC3 -> 4,5; IC4 -> 6,7
+        Setting direct register value from 0 to 1023
+        :param position: position of resistor. IC0->0,1; IC1->2,3; IC3->4,5; IC4->6,7
+        :param reg_cnt: register value from 0 to 1023
+        :return: none
+        '''
+        position = range_check(position, 0, len(self._dev_adr) - 1)  # Ensure position is within the valid range
+        reg_cnt = int(range_check(reg_cnt, 0, 1023))  # Ensure reg_cnt is within the range of 0 to 1023
+        self._buf_set_res[position] = reg_cnt  # Set the specified position in the buffer to reg_cnt
+        return self._buf_set_res  # Return the updated buffer for setting resistor values
+
+    def set_Ohm_val(self, position, res_in_Ohm):
+        '''
+        Setting resistor value  register value from 0 to 1023
+        :param position: position of resistor. IC0 -> 0,1; IC1 ->2,3; IC3 -> 4,5; IC4 -> 6,7
         :param reg_val: register value from 0 to 1023
         :return: none
         '''
-        reg_val = int(range_check(reg_val, 0, 1023))
-        self.buf_set_r[position] = reg_val
+        return self.set_raw_val(position, self._get_adc_val_from_res_val(res_in_Ohm))
 
+    #####################################
+    # Only for testing
+    #####################################
     def test_buffer(self):
         self._fill_cmd_buf()
-        hex_array_1 = [hex(value) for value in self.buf_set_r]
+        hex_array_1 = [hex(value) for value in self._buf_set_res]
         hex_array_2 = [hex(value) for value in self.buf_cmd]
-        hex_array_3 = [hex(value) for value in self.buf_spi_tx]
+        hex_array_3 = [value for value in self._buf_cmd_spi]
         print(hex_array_1)
         print(hex_array_2)
         print(hex_array_3)
 
+    #####################################
     # private methods
+    #####################################
     def _fill_cmd_buf(self):
         '''
-        trasform value buffer inti
-        :return:
+        fill in command buffer from value buffer for each resistor in chain
+        :return: buf_cmd_spi
         '''
         cmd = []
-        for index, value in enumerate(self.buf_set_r):
-            if index % 2 == 0:
-                ch = 1
-            else:
-                ch = 0
-            cmd.append(self.__get_command("wrt",ch,value))
+        for index, value in enumerate(self._buf_set_res):
+            cmd.append(self._get_command("wrt", self._dev_adr[index], value))
         self.buf_cmd = cmd
         cmd = []
         for item in self.buf_cmd:
-            cmd.append(self.__convert_to_16bits(item))
+            cmd.append(self._convert_to_8bits(item))  # by default 8 bit operation
+        #  cmd.append(self._convert_to_16bits(item)) # need to check if 16 operation possible
         # make flat array from array of arrays
         flat_array = [item for array in cmd for item in array]
-        self.buf_spi_tx = flat_array
+        self._buf_cmd_spi = flat_array
 
-    def __get_command(self, cmd="nop", ch=0, data=0):
-        # cmd_nop = const(0x00)
-        # cmd_wrt_rdac = const(0b10110000)  # cmd 11 datasheet
-        # cmd_store_wiper_eemem = const(0b00100000)
-        # cmd_rd_rdac = const(0b10100000)
-        cmd_nop = 0x00
-        cmd_wrt_rdac =0b10110000 # cmd 11 datasheet
-        cmd_store_wiper_eemem = 0b00100000
-        cmd_rd_rdac = 0b10100000
+    def _get_command(self, cmd="nop", ch=0, data=0):
+        cmd_nop = const(0x00)
+        cmd_wrt_rdac = const(0b10110000)  # cmd 11 datasheet
+        cmd_store_wiper_eemem = const(0b00100000)
+        cmd_rd_rdac = const(0b10100000)
         data = int(range_check(data, 0, 1024))
-        ch = int(range_check(ch,0,1))
+        ch = int(range_check(ch, 0, 1))
         # set cmd then
-        cmd_var = 0
-        if cmd == "wrt":
-            cmd_var = cmd_wrt_rdac
-        elif cmd == "rd":
-            cmd_var = cmd_rd_rdac
-        elif cmd == "srt_wiper":
-            cmd_var = cmd_store_wiper_eemem
-        else:
-            cmd_var = cmd_nop
+        cmd_var = {
+            "wrt": cmd_wrt_rdac,
+            "rd": cmd_rd_rdac,
+            "srt_wiper": cmd_store_wiper_eemem
+        }.get(cmd, cmd_nop)
+
         adc_value = (cmd_var << 16) | (ch << 16) | data
         return adc_value
 
-    def __convert_to_8bits(self,value):
+    def _convert_to_8bits(self, value):
         '''
         converting array of 24bits back into 8 bit for SPI send register
         :return: array of 3 values by 8 bits each
@@ -133,7 +162,7 @@ class AD9235_class:
         byte3 = value & 0xFF
         return [byte1, byte2, byte3]
 
-    def __convert_to_16bits(self, value):
+    def _convert_to_16bits(self, value):
         '''
         converting array of 24bits back into 16 bit for SPI send register
         :return: array of 2 values by 16 bits each
@@ -141,5 +170,13 @@ class AD9235_class:
         byte1 = (value >> 16) & 0xFFFF
         byte2 = value & 0xFFFF
         return [byte1, byte2]
+
+    def _get_adc_val_from_res_val(self, res_Ohm):
+        res_Ohm = range_check(res_Ohm, 0, 249900)
+        Rw = 50  # wiper resistance, datasheet
+        Rab = 250000  # full scale resistance 250k -> in Ohm
+        cnt = 1024 * (res_Ohm - Rw) / Rab
+        cnt = int(round(cnt, 0))
+        return cnt
 
 
