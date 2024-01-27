@@ -1,6 +1,6 @@
 import machine
 
-class <link>UART_CLI</link>:
+class UART_CLI:
     def __init__(self, uart_id, baudrate):
         self.uart = machine.UART(uart_id, baudrate=baudrate, tx=0, rx=1)  # Configure UART pins for RP2040
         self.commands = {}  # Dictionary to store commands and their corresponding actions
@@ -28,7 +28,7 @@ def custom_action_with_two_params(param1, param2):
     # Custom action with two parameters
     pass  # Replace with actual code for the custom action
 
-uart_cli = <link>UART_CLI</link>(uart_id=0, baudrate=115200)  # UART ID and baudrate for RP2040
+uart_cli = UART_CLI(uart_id=0, baudrate=115200)  # UART ID and baudrate for RP2040
 uart_cli.add_command('set_servo', set_servo_position, max_params=3)  # Add a custom command "set_servo" with a maximum of 3 parameters
 uart_cli.add_command('custom_action', custom_action_with_two_params, max_params=2)  # Add a custom command "custom_action" with a maximum of 2 parameters
 
