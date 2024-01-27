@@ -26,8 +26,13 @@ import machine
 import time
 from micropython import const
 from rp2 import PIO, asm_pio
-
-
+#default values
+cs_def = 9  # GPIO pin for Chip Select (CS)
+sck_def = 10  # GPIO pin for SPI Clock (SCK)
+mosi_def = 11  # GPIO pin for SPI Master Out Slave In (MOSI)
+miso_def = 8  # GPIO pin for SPI Master In Slave Out (MISO)
+spi_def = 1
+n_devs = 4
 def range_check(val, min_val, max_val):
     # Ensure val is within the specified range
     val = max_val if val > max_val else val  # If val is greater than max_val, set it to max_val, otherwise keep it unchanged
@@ -36,7 +41,7 @@ def range_check(val, min_val, max_val):
 
 
 class AD5235_class:
-    def __init__(self, spi=0, sck_pin=1, mosi_pin=2, miso_pin=3, cs_pin=4, daisy_chain=4):
+    def __init__(self, spi=spi_def, sck_pin=sck_def, mosi_pin=mosi_def, miso_pin=miso_def, cs_pin=cs_def, daisy_chain=n_devs):
         '''
         Initialization of class
         :param spi: for RP2040 available 0 or 1

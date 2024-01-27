@@ -1,23 +1,34 @@
+# https://www.waveshare.com/wiki/RP2040-Zero
+# http://staff.ltam.lu/feljc/electronics/uPython/Pico_communication.pdf
+# import libs.AD5235.AD5235m as dig_res
+# import libs.LED.Led
+import simplePyCLI as cli_class
 
-# This is a sample Python script.
-import AD5235
-import machine
-import rp2
-import time
-machine.freq()          # get the current frequency of the CPU
-machine.freq(240000000) # set the CPU frequency to 240 MHz
+cli = cli_class.simplePyCLI(">")
 
+def set_reg(ch_num, reg_val):
+    # Custom action to turn on the LED based on the parameter
+    print(f"ch_num: {ch_num}, reg_val: {reg_val}")
 
-def test():
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, rp2040')  # Press Ctrl+F8 to toggle the breakpoint.
-    dig_res = AD5235.AD9235_class(0,1,2,3,4,4)
-    for i in range(8):
-        dig_res.set_buffer(i,i)
-    dig_res.test_buffer()
+def set_res(ch_num, val):
+    # Custom action to turn on the LED based on the parameter
+    print(f"ch_num: {ch_num}, reg_val: {val}")
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    test()
+cmd_str = "set_reg"
+cmd_action = set_reg
+n_params = 2
+cmd_help = "Set register value: 'set_reg 0 1023'"
+cli.add_command(cmd_str, cmd_action, n_params, cmd_help)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+cmd_str = "set_res"
+cmd_action = set_res
+n_params = 2
+cmd_help = "Set register value: 'set_reg 0 1023'"
+cli.add_command(cmd_str, cmd_action, n_params, cmd_help)
+delay = 0.05
+while True:
+    cmd = input(">")
+    if bool(cmd):  # Check if there's any data available to read
+        cmd_with_params = cmd.strip()  # Read the command with parameters from UART and decode it
+        # print(cmd_with_params)
+        cli.process_command(cmd_with_params)  # Process the command
