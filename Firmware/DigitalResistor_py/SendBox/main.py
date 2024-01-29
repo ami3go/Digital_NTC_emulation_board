@@ -3,6 +3,8 @@
 import AD5235m as dig_res
 import simplePyCLI as cli_class
 import asyncio
+import machine
+
 
 def cli_task():
     cli = cli_class.simplePyCLI(">")

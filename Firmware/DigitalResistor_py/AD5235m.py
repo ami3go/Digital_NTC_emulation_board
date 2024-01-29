@@ -75,11 +75,12 @@ class AD5235_class:
         Write value buffer to device
         :return: None
         '''
-        print(self._buf_rd)
+        # print(self._buf_rd)
         # Select the ADC
         self._fill_cmd_buf()
         # Send command to read ADC data
-        # print(self._buf_cmd_spi) # for debug only
+        print(self._buf_cmd_spi) # for debug only
+        print(self.buf_cmd)
         command = bytes(self._buf_cmd_spi)  # Replace with the actual command bytes
         self.cs.value(0) # Select the Chip select
         self.spi.write(command) # write buffer
