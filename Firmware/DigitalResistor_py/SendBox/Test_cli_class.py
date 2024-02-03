@@ -1,9 +1,16 @@
+import os
+import sys
+# print(os.path.abspath("../"))
+sys.path.insert(0, os.path.abspath("../"))
+
+# Now you can import the module from the subfolder
 import simplePyCLI
 
 
 def turn_on_led(param, param2):
     # Custom action to turn on the LED based on the parameter
-    print("Led On")
+    print(f"Led On: P1{param}, P2:{param2})
+    return True
 
 
 def turn_off_led(param, param2):
