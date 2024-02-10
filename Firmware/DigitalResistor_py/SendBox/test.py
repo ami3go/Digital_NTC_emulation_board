@@ -15,16 +15,15 @@
 #     for i in range(8):
 #         dig_res.set_buffer(i,i#     test()
 #
-# cmd = [11534340, 11599876, 11534340, 11599876, 11534340, 11599876, 11534340, 11599876]
-# cmd1 = []
-# cmd2 = []
-# for index, value in enumerate(cmd):
-#     if index % 2 != 0:
-#         cmd1.append(value)
-#     else:
-#         cmd2.append(value)
-cmd = [[177, 0, 0], [177, 0, 0], [177, 0, 0], [177, 0, 0]]
-cmd1 = bytearray(cmd)
-print(cmd)
+cmd = [11534340, 11599876, 11534340, 11599876, 11534340, 11599876, 11534340, 11599876]
+cmd1 = []
+cmd2 = []
+cmd1 = cmd[0::2]
+cmd2 = cmd[1::2]
+
+
+# cmd = [[177, 0, 0], [177, 0, 0], [177, 0, 0], [177, 0, 0]]
+# cmd1 = bytearray(cmd)
+# print(cmd)
 print(cmd1)
-# print(cmd2)
+print(cmd2)
