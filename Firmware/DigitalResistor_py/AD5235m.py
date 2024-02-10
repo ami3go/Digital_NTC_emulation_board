@@ -27,10 +27,10 @@ import time
 from micropython import const
 from rp2 import PIO, asm_pio
 #default values
+miso_def = 8  # GPIO pin for SPI Master In Slave Out (MISO)
 cs_def = 9  # GPIO pin for Chip Select (CS)
 sck_def = 10  # GPIO pin for SPI Clock (SCK)
 mosi_def = 11  # GPIO pin for SPI Master Out Slave In (MOSI)
-miso_def = 8  # GPIO pin for SPI Master In Slave Out (MISO)
 spi_def = 1
 n_devs = 4
 def range_check(val, min_val, max_val):
@@ -69,6 +69,9 @@ class AD5235_class:
         self._buf_set_res = buffer.copy()  # buffer for setting resistor value in ADC counts
         self._buf_rd = buffer.copy()  # buffer for reading current start of wiper position in ADC counts
         self._buf_cmd_spi = buffer.copy() * 2  # SPI transmit buffer uses 16 bits values
+        self.buf1_cmd_spi = [0]*4
+        self.buf2_cmd_spi = [0]*4
+
 
     def write_to_dev(self):
         '''
@@ -79,12 +82,24 @@ class AD5235_class:
         # Select the ADC
         self._fill_cmd_buf()
         # Send command to read ADC data
-        print(self._buf_cmd_spi) # for debug only
+        print("Write to dev")
         print(self.buf_cmd)
-        command = bytes(self._buf_cmd_spi)  # Replace with the actual command bytes
+        # print(self._buf_cmd_spi) # for debug only
+        print(self.buf1_cmd_spi)  # for debug only
+        print(self.buf2_cmd_spi)  # for debug only
+        # buf1, buf2 = self._split_odd_even()
+
+
+        command = bytes(self.buf1_cmd_spi)  # Replace with the actual command bytes
         self.cs.value(0) # Select the Chip select
         self.spi.write(command) # write buffer
         self.cs.value(1) # Deselect the Chip select
+
+        command = bytes(self.buf2_cmd_spi)  # Replace with the actual command bytes
+        self.cs.value(0)  # Select the Chip select
+        self.spi.write(command)  # write buffer
+        self.cs.value(1)  # Deselect the Chip select
+
 
     # def query(self, cmd_array):
     # def set_rdaq(self, ch, val):
@@ -130,16 +145,36 @@ class AD5235_class:
         :return: buf_cmd_spi
         '''
         cmd = []
+        cmd1 = []
+        cmd2 = []
+        # creating command list for AD5235
         for index, value in enumerate(self._buf_set_res):
             cmd.append(self._get_command("wrt", self._dev_adr[index], value))
         self.buf_cmd = cmd
+        # slitting command list into two
+        # only because AD5235 support single SPI command
+        # Value for 1 resistor in Chain should be written in first go
+        # value for second resistor in chain should be written in another go
+        for index, value in enumerate(cmd):
+            if index % 2 != 0:
+                cmd1.append(value)
+            else:
+                cmd2.append(value)
         cmd = []
-        for item in self.buf_cmd:
+        for item in cmd1:
             cmd.append(self._convert_to_8bits(item))  # by default 8 bit operation
         #  cmd.append(self._convert_to_16bits(item)) # need to check if 16 operation possible
         # make flat array from array of arrays
-        flat_array = [item for array in cmd for item in array]
-        self._buf_cmd_spi = flat_array
+        print(cmd)
+        self.buf1_cmd_spi = [item for array in cmd for item in array]
+
+        cmd = []
+        for item in cmd2:
+            cmd.append(self._convert_to_8bits(item))  # by default 8 bit operation
+        #  cmd.append(self._convert_to_16bits(item)) # need to check if 16 operation possible
+        # make flat array from array of arrays
+        self.buf2_cmd_spi = [item for array in cmd for item in array]
+
 
     def _get_command(self, cmd="nop", ch=0, data=0):
         cmd_nop = const(0x00)
@@ -184,5 +219,6 @@ class AD5235_class:
         cnt = 1024 * (res_Ohm - Rw) / Rab
         cnt = int(round(cnt, 0))
         return cnt
+
 
 

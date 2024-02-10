@@ -8,5 +8,4 @@ def is_digit(var):
 # print(is_digit(456))     # Output: True
 # print(is_digit("789x"))  # Output: False
 
-import pyb
 

@@ -13,13 +13,18 @@
 #     print(f'Hi, rp2040')  # Press Ctrl+F8 to toggle the breakpoint.
 #     dig_res = AD5235.AD9235_class(0,1,2,3,4,4)
 #     for i in range(8):
-#         dig_res.set_buffer(i,i)
-#     dig_res.test_buffer()
+#         dig_res.set_buffer(i,i#     test()
 #
-# # Press the green button in the gutter to run the script.
-# if __name__ == '__main__':
-#     test()
-#
-# # See PyCharm help at https://www.jetbrains.com/help/pycharm/
-for i in range(8):
-    print(i)
+# cmd = [11534340, 11599876, 11534340, 11599876, 11534340, 11599876, 11534340, 11599876]
+# cmd1 = []
+# cmd2 = []
+# for index, value in enumerate(cmd):
+#     if index % 2 != 0:
+#         cmd1.append(value)
+#     else:
+#         cmd2.append(value)
+cmd = [[177, 0, 0], [177, 0, 0], [177, 0, 0], [177, 0, 0]]
+cmd1 = bytearray(cmd)
+print(cmd)
+print(cmd1)
+# print(cmd2)

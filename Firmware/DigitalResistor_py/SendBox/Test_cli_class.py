@@ -9,7 +9,7 @@ import simplePyCLI
 
 def turn_on_led(param, param2):
     # Custom action to turn on the LED based on the parameter
-    print(f"Led On: P1{param}, P2:{param2})
+    print(f"Led On: P1{param}, P2:{param2})/de
     return True
 
 
