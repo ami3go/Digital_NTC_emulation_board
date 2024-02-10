@@ -83,7 +83,7 @@ class AD5235_class:
         self._fill_cmd_buf()
         # Send command to read ADC data
         print("Write to dev")
-        print(self.buf_cmd)
+        # print(self.buf_cmd)
         # print(self._buf_cmd_spi) # for debug only
         print(self.buf1_cmd_spi)  # for debug only
         print(self.buf2_cmd_spi)  # for debug only
@@ -130,10 +130,10 @@ class AD5235_class:
     def test_buffer(self):
         self._fill_cmd_buf()
         hex_array_1 = [hex(value) for value in self._buf_set_res]
-        hex_array_2 = [hex(value) for value in self.buf_cmd]
+        # hex_array_2 = [hex(value) for value in self.buf_cmd]
         hex_array_3 = [value for value in self._buf_cmd_spi]
         print(hex_array_1)
-        print(hex_array_2)
+        # print(hex_array_2)
         print(hex_array_3)
 
     #####################################
@@ -148,18 +148,15 @@ class AD5235_class:
         cmd1 = []
         cmd2 = []
         # creating command list for AD5235
-        for index, value in enumerate(self._buf_set_res):
-            cmd.append(self._get_command("wrt", self._dev_adr[index], value))
-        self.buf_cmd = cmd
-        # slitting command list into two
+        # slitting command list into two list
         # only because AD5235 support single SPI command
         # Value for 1 resistor in Chain should be written in first go
         # value for second resistor in chain should be written in another go
-        for index, value in enumerate(cmd):
+        for index, value in enumerate(self._buf_set_res):
             if index % 2 != 0:
-                cmd1.append(value)
+                cmd1.append(self._get_command("wrt", self._dev_adr[index], value))
             else:
-                cmd2.append(value)
+                cmd2.append(self._get_command("wrt", self._dev_adr[index], value))
         cmd = []
         for item in cmd1:
             cmd.append(self._convert_to_8bits(item))  # by default 8 bit operation
