@@ -10,6 +10,7 @@ import time
 from machine import Pin
 import rp2
 import urandom
+
 async def cli_task():
     cli = cli_class.simplePyCLI(">")
     dev = dig_res.AD5235_class()
@@ -21,7 +22,7 @@ async def cli_task():
     def set_res(ch_num, val):
         if ut.is_digit(ch_num) and ut.is_digit(val):
             dev.set_Ohm_val(int(ch_num), int(val))
-            print(f"ch_num: {int(ch_num)}, reg_val: {int(val)}")
+            print(f"ch_num: {int(ch_num)}, res_val: {int(val)}")
 
     def write_to_dev():
         dev.write_to_dev()
@@ -38,6 +39,9 @@ async def cli_task():
                 dev.set_Ohm_val(i, int(val))
             dev.write_to_dev()
 
+    def get_res():
+        print(dev.get_res_buffer)
+
     cmd_str = "set_reg"
     cmd_action = set_reg
     n_params = 2
@@ -50,7 +54,7 @@ async def cli_task():
     cmd_help = "Set register value: 'set_reg 0 250k'"
     cli.add_command(cmd_str, cmd_action, n_params, cmd_help)
 
-    cmd_str = "write_to_dev"
+    cmd_str = "write"
     cmd_action = write_to_dev
     n_params = 0
     cmd_help = "Write resistance value from software buffer to IC"
@@ -66,6 +70,12 @@ async def cli_task():
     cmd_action = set_res_all
     n_params = 1
     cmd_help = "Set all 8 channels same value and write it to IC"
+    cli.add_command(cmd_str, cmd_action, n_params, cmd_help)
+
+    cmd_str = "get_res"
+    cmd_action = get_res
+    n_params = 0
+    cmd_help = "Get current state of resitance buffer"
     cli.add_command(cmd_str, cmd_action, n_params, cmd_help)
 
     delay = 0.05
