@@ -41,6 +41,7 @@ def range_check(val, min_val, max_val):
 
 
 class AD5235_class:
+
     def __init__(self, spi=spi_def, sck_pin=sck_def, mosi_pin=mosi_def, miso_pin=miso_def, cs_pin=cs_def, daisy_chain=n_devs):
         '''
         Initialization of class
@@ -52,6 +53,7 @@ class AD5235_class:
         :param daisy_chain: min 1 max 4
         '''
         self.cs = machine.Pin(cs_pin, machine.Pin.OUT)
+        self.cs.high()
         # # Initialize SPI
         # bits = 8
         # bits =  16 experimental to check
@@ -67,10 +69,9 @@ class AD5235_class:
         self._dev_adr = [0, 1] * daisy_chain  # there is 2 resistors in one IC packages
         buffer = [0] * daisy_chain * 2
         self._buf_set_res = buffer.copy()  # buffer for setting resistor value in ADC counts
-        self._buf_rd = buffer.copy()  # buffer for reading current start of wiper position in ADC counts
-        self._buf_cmd_spi = buffer.copy() * 2  # SPI transmit buffer uses 16 bits values
-        self.buf1_cmd_spi = [0]*4
-        self.buf2_cmd_spi = [0]*4
+        self._buf_rd = buffer.copy()  # buffer for reading current start of wiper position in ADC count
+        self.buf1_cmd_spi = [0]*daisy_chain*3 # 3 bytes per 1 device
+        self.buf2_cmd_spi = [0]*daisy_chain*3 # 3 bytes per 1 device
 
 
     def write_to_dev(self):
@@ -82,23 +83,22 @@ class AD5235_class:
         # Select the ADC
         self._fill_cmd_buf()
         # Send command to read ADC data
-        print("Write to dev")
-        # print(self.buf_cmd)
-        # print(self._buf_cmd_spi) # for debug only
-        print(self.buf1_cmd_spi)  # for debug only
-        print(self.buf2_cmd_spi)  # for debug only
-        # buf1, buf2 = self._split_odd_even()
+        # print("Write to dev")
+        # # print(self.buf_cmd)
+        # # print(self._buf_cmd_spi) # for debug only
+        print("RES: ",self._buf_set_res)
+        print("1: ",self.buf1_cmd_spi)  # for debug only
+        print("2: ", self.buf2_cmd_spi)  # for debug only
+        # # buf1, buf2 = self._split_odd_even()
 
-
-        command = bytes(self.buf1_cmd_spi)  # Replace with the actual command bytes
-        self.cs.value(0) # Select the Chip select
-        self.spi.write(command) # write buffer
-        self.cs.value(1) # Deselect the Chip select
-
-        command = bytes(self.buf2_cmd_spi)  # Replace with the actual command bytes
-        self.cs.value(0)  # Select the Chip select
-        self.spi.write(command)  # write buffer
-        self.cs.value(1)  # Deselect the Chip select
+        command1 = bytes(self.buf1_cmd_spi)  # Replace with the actual command bytes
+        command2 = bytes(self.buf2_cmd_spi)  # Replace with the actual command bytes
+        self.cs.low() # Select the Chip select
+        self.spi.write(command1) # write buffer
+        self.cs.high() # Deselect the Chip select
+        self.cs.low()  # Select the Chip select
+        self.spi.write(command2)  # write buffer
+        self.cs.high()  # Deselect the Chip select
 
 
     # def query(self, cmd_array):
@@ -131,11 +131,14 @@ class AD5235_class:
         self._fill_cmd_buf()
         hex_array_1 = [hex(value) for value in self._buf_set_res]
         # hex_array_2 = [hex(value) for value in self.buf_cmd]
-        hex_array_3 = [value for value in self._buf_cmd_spi]
+        # hex_array_3 = [value for value in self._buf_cmd_spi]
         print(hex_array_1)
         # print(hex_array_2)
-        print(hex_array_3)
+        # print(hex_array_3)
 
+    @property
+    def get_res_buffer(self):
+        return self._buf_set_res
     #####################################
     # private methods
     #####################################
@@ -153,16 +156,15 @@ class AD5235_class:
         # Value for 1 resistor in Chain should be written in first go
         # value for second resistor in chain should be written in another go
         for index, value in enumerate(self._buf_set_res):
-            if index % 2 != 0:
-                cmd1.append(self._get_command("wrt", self._dev_adr[index], value))
-            else:
-                cmd2.append(self._get_command("wrt", self._dev_adr[index], value))
+                cmd.append(self._get_command("wrt", self._dev_adr[index], value))
+        cmd1 = cmd[0::2]
+        cmd2 = cmd[1::2]
         cmd = []
         for item in cmd1:
             cmd.append(self._convert_to_8bits(item))  # by default 8 bit operation
         #  cmd.append(self._convert_to_16bits(item)) # need to check if 16 operation possible
         # make flat array from array of arrays
-        print(cmd)
+        # print(cmd)
         self.buf1_cmd_spi = [item for array in cmd for item in array]
 
         cmd = []
