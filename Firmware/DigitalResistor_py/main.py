@@ -75,7 +75,7 @@ async def cli_task():
     cmd_str = "get_res"
     cmd_action = get_res
     n_params = 0
-    cmd_help = "Get current state of resitance buffer"
+    cmd_help = "Get current state of resistance buffer"
     cli.add_command(cmd_str, cmd_action, n_params, cmd_help)
 
     delay = 0.05

@@ -15,15 +15,30 @@
 #     for i in range(8):
 #         dig_res.set_buffer(i,i#     test()
 #
-cmd = [11534340, 11599876, 11534340, 11599876, 11534340, 11599876, 11534340, 11599876]
-cmd1 = []
-cmd2 = []
-cmd1 = cmd[0::2]
-cmd2 = cmd[1::2]
+
+def convert_to_8bits(input):
+    '''
+    converting array of 24bits back into 8 bit for SPI send register
+    :return: array of 3 values by 8 bits each
+    '''
+    cmd = []
+    for value in input:
+        cmd.append( (value >> 16) & 0xFF)
+        cmd.append((value >> 8) & 0xFF)
+        cmd.append( value & 0xFF)
+        # cmd.append(byte1, byte2, byte3)
+    return cmd
+
+# self.buf1_cmd_spi = [item for array in cmd for item in array]
+# cmd = [11534340, 11599876, 11534340, 11599876, 11534340, 11599876, 11534340, 11599876]
+# cmd1 = []
+# cmd2 = []
+# cmd1 = cmd[0::2]
+# cmd2 = cmd[1::2]
 
 
 # cmd = [[177, 0, 0], [177, 0, 0], [177, 0, 0], [177, 0, 0]]
 # cmd1 = bytearray(cmd)
 # print(cmd)
-print(cmd1)
-print(cmd2)
+print(convert_to_8bits([11534340, 11599876, 11534340, 11599876, 11534340, 11599876, 11534340, 11599876]))
+# print(cmd2)

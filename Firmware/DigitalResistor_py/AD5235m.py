@@ -21,7 +21,7 @@ miso_pin = 8  # GPIO pin for SPI Master In Slave Out (MISO)
 #
 ###########################################################
 """
-
+import micropython
 import machine
 import time
 from micropython import const
@@ -33,6 +33,9 @@ sck_def = 10  # GPIO pin for SPI Clock (SCK)
 mosi_def = 11  # GPIO pin for SPI Master Out Slave In (MOSI)
 spi_def = 1
 n_devs = 4
+rdy_def = 12
+rdy = machine.Pin(rdy_def, machine.Pin.IN, machine.Pin.PULL_UP)
+
 def range_check(val, min_val, max_val):
     # Ensure val is within the specified range
     val = max_val if val > max_val else val  # If val is greater than max_val, set it to max_val, otherwise keep it unchanged
@@ -73,32 +76,21 @@ class AD5235_class:
         self.buf1_cmd_spi = [0]*daisy_chain*3 # 3 bytes per 1 device
         self.buf2_cmd_spi = [0]*daisy_chain*3 # 3 bytes per 1 device
 
-
+    @micropython.native
     def write_to_dev(self):
         '''
         Write value buffer to device
         :return: None
         '''
-        # print(self._buf_rd)
-        # Select the ADC
         self._fill_cmd_buf()
-        # Send command to read ADC data
-        # print("Write to dev")
-        # # print(self.buf_cmd)
-        # # print(self._buf_cmd_spi) # for debug only
         print("RES: ",self._buf_set_res)
         print("1: ",self.buf1_cmd_spi)  # for debug only
         print("2: ", self.buf2_cmd_spi)  # for debug only
         # # buf1, buf2 = self._split_odd_even()
+        spi = self._spi_write
+        spi(self.buf1_cmd_spi)
+        spi(self.buf2_cmd_spi)
 
-        command1 = bytes(self.buf1_cmd_spi)  # Replace with the actual command bytes
-        command2 = bytes(self.buf2_cmd_spi)  # Replace with the actual command bytes
-        self.cs.low() # Select the Chip select
-        self.spi.write(command1) # write buffer
-        self.cs.high() # Deselect the Chip select
-        self.cs.low()  # Select the Chip select
-        self.spi.write(command2)  # write buffer
-        self.cs.high()  # Deselect the Chip select
 
 
     # def query(self, cmd_array):
@@ -139,6 +131,10 @@ class AD5235_class:
     @property
     def get_res_buffer(self):
         return self._buf_set_res
+    def store_wiper_to_eemem(self):
+        cmd = []
+        for i in range(8):
+            cmd.append(self._get_command("srt_wiper", self._dev_adr[index], 0))
     #####################################
     # private methods
     #####################################
@@ -162,11 +158,12 @@ class AD5235_class:
         cmd = []
         for item in cmd1:
             cmd.append(self._convert_to_8bits(item))  # by default 8 bit operation
-        #  cmd.append(self._convert_to_16bits(item)) # need to check if 16 operation possible
+         # cmd.append(self._convert_to_16bits(item)) # need to check if 16 operation possible
         # make flat array from array of arrays
-        # print(cmd)
+        print(cmd)
         self.buf1_cmd_spi = [item for array in cmd for item in array]
-
+        # self.buf1_cmd_spi = self._convert_to_8bit_arrya(cmd1)
+        # self.buf2_cmd_spi = self._convert_to_8bit_arrya(cmd2)
         cmd = []
         for item in cmd2:
             cmd.append(self._convert_to_8bits(item))  # by default 8 bit operation
@@ -174,11 +171,12 @@ class AD5235_class:
         # make flat array from array of arrays
         self.buf2_cmd_spi = [item for array in cmd for item in array]
 
-
+    @micropython.native
     def _get_command(self, cmd="nop", ch=0, data=0):
         cmd_nop = const(0x00)
         cmd_wrt_rdac = const(0b10110000)  # cmd 11 datasheet
         cmd_store_wiper_eemem = const(0b00100000)
+        cmd_restore_wiper_eemem = const(0b00010000)
         cmd_rd_rdac = const(0b10100000)
         data = int(range_check(data, 0, 1024))
         ch = int(range_check(ch, 0, 1))
@@ -186,12 +184,14 @@ class AD5235_class:
         cmd_var = {
             "wrt": cmd_wrt_rdac,
             "rd": cmd_rd_rdac,
-            "srt_wiper": cmd_store_wiper_eemem
+            "srt_wiper": cmd_store_wiper_eemem,
+            "resrt_wiper": cmd_restore_wiper_eemem,
         }.get(cmd, cmd_nop)
 
         adc_value = (cmd_var << 16) | (ch << 16) | data
         return adc_value
 
+    @micropython.native
     def _convert_to_8bits(self, value):
         '''
         converting array of 24bits back into 8 bit for SPI send register
@@ -201,7 +201,19 @@ class AD5235_class:
         byte2 = (value >> 8) & 0xFF
         byte3 = value & 0xFF
         return [byte1, byte2, byte3]
+    def _convert_to_8bit_arrya(self, in_array):
+        '''
+        converting array of 24bits back into 8 bit for SPI send register
+        :return: array of 3 values by 8 bits each
+        '''
+        ret_val = []
+        for value in in_array:
+            ret_val.append((value >> 16) & 0xFF)
+            ret_val.append((value >> 8) & 0xFF)
+            ret_val.append(value & 0xFF)
+        return ret_val
 
+    @micropython.native
     def _convert_to_16bits(self, value):
         '''
         converting array of 24bits back into 16 bit for SPI send register
@@ -211,6 +223,7 @@ class AD5235_class:
         byte2 = value & 0xFFFF
         return [byte1, byte2]
 
+    @micropython.native
     def _get_adc_val_from_res_val(self, res_Ohm):
         res_Ohm = range_check(res_Ohm, 0, 249900)
         Rw = 50  # wiper resistance, datasheet
@@ -219,5 +232,10 @@ class AD5235_class:
         cnt = int(round(cnt, 0))
         return cnt
 
+    @micropython.native
+    def _spi_write(self, command):
+        self.cs.low()  # Select the Chip select
+        self.spi.write(bytes(command))  # write buffer
+        self.cs.high()  # Deselect the Chip select
 
 
