@@ -77,19 +77,17 @@ class AD5235_class:
         self.buf2_cmd_spi = [0]*daisy_chain*3 # 3 bytes per 1 device
 
     @micropython.native
-    def write_to_dev(self):
+    def write_resistance(self):
         '''
         Write value buffer to device
         :return: None
         '''
-        self._fill_cmd_buf()
+        self._fill_cmd_buf("wrt", self._buf_set_res)
         print("RES: ",self._buf_set_res)
-        print("1: ",self.buf1_cmd_spi)  # for debug only
+        print("1: ", self.buf1_cmd_spi)  # for debug only
         print("2: ", self.buf2_cmd_spi)  # for debug only
-        # # buf1, buf2 = self._split_odd_even()
-        spi = self._spi_write
-        spi(self.buf1_cmd_spi)
-        spi(self.buf2_cmd_spi)
+        self._spi_write(self.buf1_cmd_spi)
+        self._spi_write(self.buf2_cmd_spi)
 
 
 
@@ -131,45 +129,42 @@ class AD5235_class:
     @property
     def get_res_buffer(self):
         return self._buf_set_res
+
     def store_wiper_to_eemem(self):
-        cmd = []
-        for i in range(8):
-            cmd.append(self._get_command("srt_wiper", self._dev_adr[index], 0))
+        data = [1]*8
+        self._fill_cmd_buf("srt_wiper", data)
+        print("1: ", self.buf1_cmd_spi)  # for debug only
+        print("2: ", self.buf2_cmd_spi)  # for debug only
+        self._spi_write(self.buf1_cmd_spi)
+        self._spi_write(self.buf2_cmd_spi)
+
+    def restore_wiper(self):
+        data = [] * 8
+        self._fill_cmd_buf("resrt_wiper", data)
+        print("1: ", self.buf1_cmd_spi)  # for debug only
+        print("2: ", self.buf2_cmd_spi)  # for debug only
+        self._spi_write(self.buf1_cmd_spi)
+        self._spi_write(self.buf2_cmd_spi)
+
     #####################################
     # private methods
     #####################################
-    def _fill_cmd_buf(self):
+    def _fill_cmd_buf(self, spi_cmd, buffer):
         '''
         fill in command buffer from value buffer for each resistor in chain
         :return: buf_cmd_spi
         '''
         cmd = []
-        cmd1 = []
-        cmd2 = []
         # creating command list for AD5235
-        # slitting command list into two list
+        # splitting command list into two list
         # only because AD5235 support single SPI command
         # Value for 1 resistor in Chain should be written in first go
         # value for second resistor in chain should be written in another go
-        for index, value in enumerate(self._buf_set_res):
-                cmd.append(self._get_command("wrt", self._dev_adr[index], value))
-        cmd1 = cmd[0::2]
-        cmd2 = cmd[1::2]
-        cmd = []
-        for item in cmd1:
-            cmd.append(self._convert_to_8bits(item))  # by default 8 bit operation
-         # cmd.append(self._convert_to_16bits(item)) # need to check if 16 operation possible
-        # make flat array from array of arrays
-        print(cmd)
-        self.buf1_cmd_spi = [item for array in cmd for item in array]
-        # self.buf1_cmd_spi = self._convert_to_8bit_arrya(cmd1)
-        # self.buf2_cmd_spi = self._convert_to_8bit_arrya(cmd2)
-        cmd = []
-        for item in cmd2:
-            cmd.append(self._convert_to_8bits(item))  # by default 8 bit operation
-        #  cmd.append(self._convert_to_16bits(item)) # need to check if 16 operation possible
-        # make flat array from array of arrays
-        self.buf2_cmd_spi = [item for array in cmd for item in array]
+        for index, value in enumerate(buffer):
+            cmd.append(self._get_command(spi_cmd, self._dev_adr[index], value))
+        self.buf1_cmd_spi = self._convert_to_8bit_arrya(cmd[0::2])
+        self.buf2_cmd_spi = self._convert_to_8bit_arrya(cmd[1::2])
+
 
     @micropython.native
     def _get_command(self, cmd="nop", ch=0, data=0):
