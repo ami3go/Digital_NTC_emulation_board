@@ -139,7 +139,7 @@ class AD5235_class:
         self._spi_write(self.buf2_cmd_spi)
 
     def restore_wiper(self):
-        data = [] * 8
+        data = [0] * 8
         self._fill_cmd_buf("resrt_wiper", data)
         print("1: ", self.buf1_cmd_spi)  # for debug only
         print("2: ", self.buf2_cmd_spi)  # for debug only

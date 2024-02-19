@@ -1,20 +1,9 @@
-# https://www.waveshare.com/wiki/RP2040-Zero
-# http://staff.ltam.lu/feljc/electronics/uPython/Pico_communication.pdf
-# # https://www.waveshare.com/wiki/RP2040-Zero
-# # http://staff.ltam.lu/feljc/electronics/uPython/Pico_communication.pdf
-import machine
-
 import AD5235m as dig_res
 import select
 import sys
 import simplePyCLI as cli_class
-import Led
 import uasyncio
 import utils as ut
-import time
-from machine import Pin
-import rp2
-import urandom
 
 
 async def cli_task():
@@ -55,6 +44,9 @@ async def cli_task():
 
     def store_wiper():
         dev.store_wiper_to_eemem()
+
+    def restore_wiper():
+        dev.restore_wiper()
 
     cmd_str = "set_reg"
     cmd_action = set_reg
@@ -98,43 +90,21 @@ async def cli_task():
     cmd_help = "Save current wiper position to internal EEMEM"
     cli.add_command(cmd_str, cmd_action, n_params, cmd_help)
 
+    cmd_str = "restore_wiper"
+    cmd_action = restore_wiper
+    n_params = 0
+    cmd_help = "Save current wiper position to internal EEMEM"
+    cli.add_command(cmd_str, cmd_action, n_params, cmd_help)
 
 
     delay = 0.05
     while True:
         await uasyncio.sleep(delay)  # Simulate some v
         if poll_object.poll(0):
-#        #read as character
+        #read as character
             cmd = sys.stdin.readline(100)
-            print(cmd, "fuck")
-            if bool(cmd):  # Check if there's any data available to read
+            # print(bytearray(cmd.encode()))
+            if cmd != "\n": # Check if there's any data available to read
                 cmd_with_params = cmd.strip()  # Read the command with parameters from UART and decode it
                 # print(cmd_with_params)
                 cli.process_command(cmd_with_params)  # Process the command
-
-async def led_task():
-    led = Led.LEDController(16,1)
-    delay = 1
-    r = 0
-    g = 0
-    b = 255
-    while True:
-        led.set_color(0, (r, g, b))
-        await uasyncio.sleep(delay)  # Simulate some v
-        led.clear()
-        await uasyncio.sleep(delay)  # Simulate some v
-        r = urandom.getrandbits(8)
-        g = urandom.getrandbits(8)
-        b = urandom.getrandbits(8)
-
-
-
-async def main():
-    # queue = asyncio.Queue()
-    cli_tsk = uasyncio.create_task(cli_task())
-    led_tsk = uasyncio.create_task(led_task())
-    await cli_tsk
-    await led_tsk
-
-uasyncio.run(main())
-
