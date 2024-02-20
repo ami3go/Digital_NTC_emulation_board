@@ -96,7 +96,6 @@ async def cli_task():
     cmd_help = "Save current wiper position to internal EEMEM"
     cli.add_command(cmd_str, cmd_action, n_params, cmd_help)
 
-
     delay = 0.05
     sys.stdout.write(">")
     while True:
