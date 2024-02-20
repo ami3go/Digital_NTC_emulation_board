@@ -26,15 +26,19 @@ import machine
 import time
 from micropython import const
 from rp2 import PIO, asm_pio
-#default values
+
+# default values
+
 miso_def = 8  # GPIO pin for SPI Master In Slave Out (MISO)
 cs_def = 9  # GPIO pin for Chip Select (CS)
 sck_def = 10  # GPIO pin for SPI Clock (SCK)
 mosi_def = 11  # GPIO pin for SPI Master Out Slave In (MOSI)
-spi_def = 1
-n_devs = 4
+spi_def = 1 # SPI interface number, 0 or 1
+n_devs = 4  # number of AD5235 device connected in daisy chain
 rdy_def = 12
 rdy = machine.Pin(rdy_def, machine.Pin.IN, machine.Pin.PULL_UP)
+r_ab_val = 250000  # Full scale resistance 10000 or 250000
+
 
 def range_check(val, min_val, max_val):
     # Ensure val is within the specified range
@@ -45,7 +49,7 @@ def range_check(val, min_val, max_val):
 
 class AD5235_class:
 
-    def __init__(self, spi=spi_def, sck_pin=sck_def, mosi_pin=mosi_def, miso_pin=miso_def, cs_pin=cs_def, daisy_chain=n_devs):
+    def __init__(self, spi=spi_def, sck_pin=sck_def, mosi_pin=mosi_def, miso_pin=miso_def, cs_pin=cs_def, daisy_chain=n_devs, r_ab=r_ab_val):
         '''
         Initialization of class
         :param spi: for RP2040 available 0 or 1
@@ -55,6 +59,7 @@ class AD5235_class:
         :param cs_pin: chip select
         :param daisy_chain: min 1 max 4
         '''
+        self.Rab = const(r_ab)
         self.cs = machine.Pin(cs_pin, machine.Pin.OUT)
         self.cs.high()
         # # Initialize SPI
@@ -109,22 +114,11 @@ class AD5235_class:
         '''
         Setting resistor value  register value from 0 to 1023
         :param position: position of resistor. IC0 -> 0,1; IC1 ->2,3; IC3 -> 4,5; IC4 -> 6,7
-        :param reg_val: register value from 0 to 1023
+        :param res_in_Ohm: resistance in Ohm from 0 to 250k
         :return: none
         '''
         return self.set_raw_val(position, self._get_adc_val_from_res_val(res_in_Ohm))
 
-    #####################################
-    # Only for testing
-    #####################################
-    def test_buffer(self):
-        self._fill_cmd_buf()
-        hex_array_1 = [hex(value) for value in self._buf_set_res]
-        # hex_array_2 = [hex(value) for value in self.buf_cmd]
-        # hex_array_3 = [value for value in self._buf_cmd_spi]
-        print(hex_array_1)
-        # print(hex_array_2)
-        # print(hex_array_3)
 
     @property
     def get_res_buffer(self):
@@ -173,6 +167,7 @@ class AD5235_class:
         cmd_store_wiper_eemem = const(0b00100000)
         cmd_restore_wiper_eemem = const(0b00010000)
         cmd_rd_rdac = const(0b10100000)
+        cmd_reset = const(0b10000000)
         data = int(range_check(data, 0, 1024))
         ch = int(range_check(ch, 0, 1))
         # set cmd then
@@ -181,6 +176,7 @@ class AD5235_class:
             "rd": cmd_rd_rdac,
             "srt_wiper": cmd_store_wiper_eemem,
             "resrt_wiper": cmd_restore_wiper_eemem,
+            "rst": cmd_reset
         }.get(cmd, cmd_nop)
 
         adc_value = (cmd_var << 16) | (ch << 16) | data
@@ -222,8 +218,8 @@ class AD5235_class:
     def _get_adc_val_from_res_val(self, res_Ohm):
         res_Ohm = range_check(res_Ohm, 0, 249900)
         Rw = 50  # wiper resistance, datasheet
-        Rab = 250000  # full scale resistance 250k -> in Ohm
-        cnt = 1024 * (res_Ohm - Rw) / Rab
+        # Rab = 250000  # full scale resistance 250k -> in Ohm
+        cnt = 1024 * (res_Ohm - Rw) / self.Rab
         cnt = int(round(cnt, 0))
         return cnt
 

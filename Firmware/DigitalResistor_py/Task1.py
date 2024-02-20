@@ -1,4 +1,4 @@
-import AD5235m as dig_res
+import AD5235 as dig_res
 import select
 import sys
 import simplePyCLI as cli_class
@@ -98,6 +98,7 @@ async def cli_task():
 
 
     delay = 0.05
+    sys.stdout.write(">")
     while True:
         await uasyncio.sleep(delay)  # Simulate some v
         if poll_object.poll(0):
@@ -108,3 +109,4 @@ async def cli_task():
                 cmd_with_params = cmd.strip()  # Read the command with parameters from UART and decode it
                 # print(cmd_with_params)
                 cli.process_command(cmd_with_params)  # Process the command
+                sys.stdout.write(">")

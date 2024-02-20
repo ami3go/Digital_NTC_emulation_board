@@ -4,7 +4,7 @@
 # # http://staff.ltam.lu/feljc/electronics/uPython/Pico_communication.pdf
 import machine
 
-import AD5235m as dig_res
+import AD5235 as dig_res
 import select
 import sys
 import simplePyCLI as cli_class

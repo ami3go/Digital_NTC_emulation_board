@@ -42,7 +42,8 @@ class SDCard:
     def __init__(self, spi, cs, baudrate=1320000):
         self.spi = spi
         self.cs = cs
-
+        self.sectors = 0
+        self.cdv = 0
         self.cmdbuf = bytearray(6)
         self.dummybuf = bytearray(512)
         self.tokenbuf = bytearray(1)

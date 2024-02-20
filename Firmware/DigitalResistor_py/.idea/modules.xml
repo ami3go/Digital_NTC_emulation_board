@@ -2,8 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../CodeTest/.idea/CodeTest.iml" filepath="$PROJECT_DIR$/../CodeTest/.idea/CodeTest.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/DigitalResistor.iml" filepath="$PROJECT_DIR$/.idea/DigitalResistor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../pyFirmware/Testing_Code/.idea/Testing_Code.iml" filepath="$PROJECT_DIR$/../../pyFirmware/Testing_Code/.idea/Testing_Code.iml" />
       <module fileurl="file://$PROJECT_DIR$/../../pyFirmware/Testing_code/.idea/Testing_code.iml" filepath="$PROJECT_DIR$/../../pyFirmware/Testing_code/.idea/Testing_code.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Testing_code/pythonProject/.idea/pythonProject.iml" filepath="$PROJECT_DIR$/../Testing_code/pythonProject/.idea/pythonProject.iml" />
     </modules>
   </component>
 </project>
